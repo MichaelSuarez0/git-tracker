@@ -4,14 +4,16 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any, Optional
 
-import httpx
+import httpx2
 
+from git_tracker.models.label import GithubLabel
 from git_tracker.utils.async_api_wrapper import AsyncApiWrapper
 
 
 class GitHubCommitsTracker(AsyncApiWrapper):
     BASE_URL = "https://api.github.com"
     GRAPHQL_URL = "https://api.github.com/graphql"
+    GITHUB_URL = "https://github.com"
 
     def __init__(
         self,
@@ -32,7 +34,17 @@ class GitHubCommitsTracker(AsyncApiWrapper):
             "Accept": "application/vnd.github.v3+json",
             "Content-Type": "application/json",
         }
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: Optional[httpx2.AsyncClient] = None
+
+    async def add_labels(
+        self, owner: str, repo: str, label: GithubLabel | dict
+    ) -> None:
+        label = GithubLabel.parse(label)
+
+        endpoint = f"/repos/{owner}/{repo}/labels"
+        response = await self.POST(endpoint=endpoint, json=label.model_dump())
+        logging.info(f"Añadido {label.name} a {self.GITHUB_URL}/{owner}/{repo}")
+        logging.debug(response.json())
 
     async def get_following(
         self, username: str, exclude: Optional[list[str] | str] = None
@@ -51,9 +63,7 @@ class GitHubCommitsTracker(AsyncApiWrapper):
 
         while True:
             endpoint = f"/users/{username}/following"
-            response = await self._api_request(
-                endpoint, params={"per_page": 100, "page": page}
-            )
+            response = await self.GET(endpoint, params={"per_page": 100, "page": page})
 
             data = response.json()
             if not data:
@@ -156,7 +166,7 @@ class GitHubCommitsTracker(AsyncApiWrapper):
                     .get("user", {})
                     .get("contributionsCollection", {})
                 )
-        except httpx.RequestError as e:
+        except httpx2.RequestError as e:
             self.logger.error(f"Error: {e}")
 
         return None
