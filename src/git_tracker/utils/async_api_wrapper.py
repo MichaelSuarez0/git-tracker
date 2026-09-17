@@ -2,7 +2,7 @@ import logging
 from abc import ABC
 from typing import Any, Optional
 
-import httpx
+import httpx2
 
 from .ensure_logger import ensure_logger
 
@@ -18,7 +18,7 @@ class AsyncApiWrapper(ABC):
     ):
         self.timeout = timeout
         self.headers: dict
-        self._client: Optional[httpx.AsyncClient]
+        self._client: Optional[httpx2.AsyncClient]
         self.logger = ensure_logger(logger)
         self.api_calls = 0
 
@@ -27,7 +27,7 @@ class AsyncApiWrapper(ABC):
         # self.headers = {"authorization": api_key}
 
     async def __aenter__(self):
-        self._client = httpx.AsyncClient(
+        self._client = httpx2.AsyncClient(
             headers=self.headers, timeout=self.timeout, base_url=self.BASE_URL
         )
         return self
@@ -39,10 +39,10 @@ class AsyncApiWrapper(ABC):
             self.logger.info(f"Total API calls: {self.api_calls}")
             self.api_calls = 0
 
-    async def _get_client(self) -> httpx.AsyncClient:
+    async def _get_client(self) -> httpx2.AsyncClient:
         """Get or create HTTP client"""
         if self._client is None:
-            self._client = httpx.AsyncClient(
+            self._client = httpx2.AsyncClient(
                 headers=self.headers, timeout=self.timeout, base_url=self.BASE_URL
             )
         return self._client
@@ -53,18 +53,41 @@ class AsyncApiWrapper(ABC):
             await self._client.aclose()
             self._client = None
 
-    async def _api_request(
-        self, endpoint: str, params: dict[str, Any] | None = None
-    ) -> httpx.Response:
-        """Make API request with error handling"""
+    async def _request(
+        self,
+        method: str,
+        endpoint: str,
+        params: dict[str, Any] | None = None,
+        json: dict[str, Any] | None = None,
+    ) -> httpx2.Response:
         client = await self._get_client()
         try:
-            response = await client.get(endpoint, params=params)
+            response = await client.request(method, endpoint, params=params, json=json)
             self.api_calls += 1
             self.logger.debug(f"Api calls: {self.api_calls}")
             response.raise_for_status()
             return response
-        except httpx.HTTPStatusError as e:
+        except httpx2.HTTPStatusError as e:
             raise Exception(f"HTTP {e.response.status_code}: {e.response.text}") from e
-        except httpx.RequestError as e:
+        except httpx2.RequestError as e:
             raise Exception(f"Request failed: {str(e)}") from e
+
+    async def GET(
+        self, endpoint: str, params: dict[str, Any] | None = None
+    ) -> httpx2.Response:
+        return await self._request("GET", endpoint, params=params)
+
+    async def POST(
+        self, endpoint: str, json: dict[str, Any] | None = None
+    ) -> httpx2.Response:
+        return await self._request("POST", endpoint, json=json)
+
+    async def PATCH(
+        self, endpoint: str, json: dict[str, Any] | None = None
+    ) -> httpx2.Response:
+        return await self._request("PATCH", endpoint, json=json)
+
+    async def DELETE(
+        self, endpoint: str, params: dict[str, Any] | None = None
+    ) -> httpx2.Response:
+        return await self._request("DELETE", endpoint, params=params)
