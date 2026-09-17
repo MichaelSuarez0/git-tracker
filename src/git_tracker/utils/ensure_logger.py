@@ -14,7 +14,7 @@ def setup_logger(
     log_file: Optional[Path] = None,
     level: int = logging.INFO,
     log_to_console: bool = True,
-    log_to_file: bool = False
+    log_to_file: bool = False,
 ) -> logging.Logger:
     """
     Configura el logger principal.
@@ -37,13 +37,12 @@ def setup_logger(
         logger.handlers.clear()
 
     formatter = logging.Formatter(
-        '[%(asctime)s] [%(levelname)s] %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        "[%(asctime)s] [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
 
     if log_to_console:
         console_handler = logging.StreamHandler()
-        console_handler.setFormatter(logging.Formatter('[%(levelname)s] %(message)s'))
+        console_handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
         logger.addHandler(console_handler)
 
     if log_to_file:

@@ -3,19 +3,17 @@ from pathlib import Path
 from typing import Optional
 
 
-def ensure_logger(self, logger)-> logging.Logger:
+def ensure_logger(self, logger) -> logging.Logger:
     if isinstance(logger, logging.Logger):
         self.logger = logger
 
     elif logger is None:
-        logging.basicConfig(
-            level=logging.INFO, format="[%(levelname)s] %(message)s"
-        )
+        logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
         self.logger = logging.getLogger(self.__class__.__name__)
     elif logger is False:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.addHandler(logging.NullHandler())
-    
+
     return self.logger
 
 
@@ -24,7 +22,7 @@ def setup_logger(
     log_file: Optional[Path] = None,
     level: int = logging.INFO,
     log_to_console: bool = True,
-    log_to_file: bool = False
+    log_to_file: bool = False,
 ) -> logging.Logger:
     """
     Configura el logger principal.
@@ -47,13 +45,12 @@ def setup_logger(
         logger.handlers.clear()
 
     formatter = logging.Formatter(
-        '[%(asctime)s] [%(levelname)s] %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        "[%(asctime)s] [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
 
     if log_to_console:
         console_handler = logging.StreamHandler()
-        console_handler.setFormatter(logging.Formatter('[%(levelname)s] %(message)s'))
+        console_handler.setFormatter(logging.Formatter("[%(levelname)s] %(message)s"))
         logger.addHandler(console_handler)
 
     if log_to_file:

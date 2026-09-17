@@ -9,5 +9,7 @@ class ResponseBaseModel(BaseModel):
         if isinstance(data, dict):
             return cls(**data)
         if not isinstance(data, cls):
-            raise TypeError(f"Expected {cls.__name__} or dict, got {type(data).__name__}")
+            raise TypeError(
+                f"Expected {cls.__name__} or dict, got {type(data).__name__}"
+            )
         return data
