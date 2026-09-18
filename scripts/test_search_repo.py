@@ -1,16 +1,13 @@
-
 import asyncio
 import logging
-import os
 
+from conf import TOKEN
 from dotenv import load_dotenv
 
 from git_tracker import GitHubRepositorySearch
 
 load_dotenv()
 
-TOKEN = os.getenv("GITHUB_API_TOKEN", "")
-USERNAME = "MichaelSuarez0"
 
 # Example usage
 async def main():
@@ -22,8 +19,8 @@ async def main():
     searcher = GitHubRepositorySearch(TOKEN)
 
     # Search for repositories
-    print("Searching for Cardano repositories...")
-    results = await searcher.search_repositories("cardano language:python", page=1)
+    print("Searching for ceplan repositories...")
+    results = await searcher.search_repositories("ceplan language:python", page=1)
 
     if results and "items" in results:
         print(f"\n✓ Found {results['total_count']} repositories")
@@ -55,9 +52,11 @@ async def main():
                 readme_preview = info["readme"][:200].replace("\n", " ")
                 print(f"\n📄 README preview: {readme_preview}...")
 
-            # Search for cardano mentions in code
-            has_cardano = await searcher.search_code_in_repo(repo_name, "cardano")
-            print(f"\n🔍 'cardano' mentions in code: {'✓ Yes' if has_cardano else '✗ No'}")
+            # Search for ceplan mentions in code
+            has_ceplan = await searcher.search_code_in_repo(repo_name, "ceplan")
+            print(
+                f"\n🔍 'ceplan' mentions in code: {'✓ Yes' if has_ceplan else '✗ No'}"
+            )
 
 
 if __name__ == "__main__":
